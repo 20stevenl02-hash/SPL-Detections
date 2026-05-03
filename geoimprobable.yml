@@ -3,7 +3,7 @@ id: 53e6c4bf-fd2c-4b4f-863d-456b035820a5
 author: Steven Lourenco 20stevenl02@gmail.com
 date: 2026-01-28
 description: Looks at network authentication events and looks for a sequence of events 
-where a user is authenticated from two locations that would be improabale to travle in 
+where a user is authenticated from two locations that would be improabale to travel in 
 the amount of time between authentication events
 log_source:
   platform: splunk
