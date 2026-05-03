@@ -58,15 +58,6 @@ Feel free to open an issue or submit a pull request.
 
 ---
 
-## 📬 Contact
-
-If you’d like to connect, collaborate, or discuss detection engineering:
-
-* GitHub: *(your profile link)*
-* LinkedIn: *(optional)*
-
----
-
 ## ⚠️ Disclaimer
 
 These detections are provided for educational and operational use. Effectiveness may vary depending on your environment, logging configuration, and data quality.
