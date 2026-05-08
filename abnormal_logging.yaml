@@ -1,0 +1,19 @@
+title: Abnormal Logging
+id: f762744c-b1e4-403a-921f-7aa8f33c584d 
+author: Steven Lourenco 20stevenl02@gmail.com
+date: 2026-05-08
+description: Looks at an event code from windows event logs and calculates outliers  based on the median absolute deviation of the count of logs
+log_source:
+  platform: splunk
+  product: Microsoft
+  category: Windows Event Logs
+query:
+  language: spl
+  text:
+  EventCode=4688
+  | stats c by host, EventCode
+  | eventstats median("c") as median // calculate the median
+  | eval absDev=(abs('c'-median)) // calculate the absolute deviation of each value from the median
+  | eventstats median(absDev) as medianAbsDev // compute the median absolute deviation
+  | eval lowerBound=(median-medianAbsDev*exact(65)), upperBound=(median+medianAbsDev*exact(65)) // calculate the bounds as a multiple of the median absolute deviation adjust number as needed for desired amount of outliers
+  | eval isOutlier=if('c' < lowerBound OR 'c' > upperBound, 1, 0) // mark values outside the bounds as outliers
