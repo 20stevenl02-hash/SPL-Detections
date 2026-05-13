@@ -1,0 +1,48 @@
+title: Potential C2 Beacon Detection via Statistical Analysis
+id: a7f3c892-5d6e-4b1a-9c2f-8e4d7f9a3b5c
+author: Steven Lourenco 20stevenl02@gmail.com
+date: 2026-05-13
+description: Detects potential command and control (C2) beaconing activity by analyzing outbound firewall connections for consistent timing intervals and payload sizes. Uses coefficient of variation to identify automated communication patterns characteristic of malware beacons.
+log_source:
+  platform: splunk
+  product: agnostic
+  category: Network Traffic Logs
+query:
+  language: spl
+  text: 
+    index=firewall_logs sourcetype=traffic action=allowed direction=outbound
+    | eval connection_key=src_ip."-->".dest_ip.":".dest_port
+    | sort 0 connection_key, _time
+    | streamstats window=1 current=f last(_time) AS last_seen by connection_key
+    | streamstats count as occurrence_number by connection_key
+    | eval time_delta = _time - last_seen
+    | stats count as total_occurences,
+            avg(time_delta) as avg_interval,
+            stdev(time_delta) as stdev_interval,
+            avg(bytes_out) as avg_bytes_out,
+            stdev(bytes_out) as stdev_bytes_out,
+            min(_time) as first_seen,
+            max(_time) as last_seen,
+            values(dest_port) as dest_ports
+            by connection_key, dest_ip
+    | search total_occurences >= 30
+    | eval interval_coefficient_variation=stdev_interval/avg_interval
+    | eval bytes_coefficient_variation=stdev_bytes_out/avg_bytes_out
+    | search interval_coefficient_variation < 0.3 AND bytes_coefficient_variation < 0.3
+notes:
+  - Adjust total_occurences threshold (default 30) based on your environment
+  - CV < 0.3 indicates highly consistent timing characteristic of automated beacons
+  - CV near 1.0+ indicates erratic human-driven traffic
+  - Consistent payload sizes suggest automated communication rather than user activity
+  - May require tuning of CV thresholds based on baseline traffic patterns
+false_positives:
+  - Legitimate automated tasks (scheduled backups, monitoring agents, update checks)
+  - Internal polling mechanisms
+  - Legitimate cloud service synchronization
+mitigation:
+  - Investigate destination IPs for known malicious infrastructure
+  - Analyze connection patterns and payload content
+  - Check source systems for signs of compromise
+  - Review process trees associated with connections
+references:
+  - https://www.sans.org/white-papers/detecting-beaconing-malware/
