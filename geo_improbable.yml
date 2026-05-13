@@ -2,32 +2,53 @@ title: Detecting Geographical Improbable Access
 id: 53e6c4bf-fd2c-4b4f-863d-456b035820a5
 author: Steven Lourenco 20stevenl02@gmail.com
 date: 2026-01-28
-description: Looks at network authentication events and looks for a sequence of events 
-where a user is authenticated from two locations that would be improabale to travel in 
-the amount of time between authentication events
+description: Looks at network authentication events and looks for a sequence of events where a user is authenticated from two locations that would be improbable to travel in the amount of time between authentication events
 log_source:
   platform: splunk
   product: agnostic
   category: network_authentication
 query:
   language: spl
-  text:
-  src_ip!=172.16* src_ip!=10.*  src_ip!=192.168.*
-  |sort 0 user, _time 
-  |streamstats window=1 current=f last(_time) AS last_time last(src_ip) AS last_src_ip by user  
-  |streamstats window=1 current=f last(last_time) AS last2_time last(last_src_ip) AS last2_src_ip by user 
-  |eval pingpong = if(src_ip = last2_src_ip AND src_ip != last_src_ip AND (_time - last2_time) < 900, 1, 0) 
-  |where last_src_ip != src_ip  ```filters out events that have the same src_ip as the previous event
-  |iplocation last_src_ip ```Retrives location information for the last src_ip
-  |rename lat AS last_lat lon AS last_lon City as last_city Region as last_region Country as last_country 
-  |iplocation src_ip ```retrieves location information for current src_ip
-  |eval rlat1 = pi()*last_lat/180, rlat2=pi()*lat/180, rlat = pi()*(lat-last_lat)/180, rlon= pi()*(lon-last_lon)/180
-  |eval a = sin(rlat/2) * sin(rlat/2) + cos(rlat1) * cos(rlat2) * sin(rlon/2) * sin(rlon/2) 
-  |eval c = 2 * atan2(sqrt(a), sqrt(1-a)) 
-  |eval distance = 6371 * c, time_difference_hours = round((_time - last_time) / 3600,2)
-  |eval distance= distance* 0.621371 ```converts distance from kilometers to miles
-  |eval speed=round(distance/ ( time_difference_hours),2) 
-  |fields - rlat* a c
-  |eval last_time= strftime(last_time,"%Y-%m-%d %H:%M:%S") 
-  |where speed > 5000
-  |table user src_ip last_src_ip last2_src_ip _time last_time src_ip City, last_city, Region, last_region Country, last_country, time_difference_hours, distance, speed
+  text: 
+    src_ip!=172.16* src_ip!=10.* src_ip!=192.168.*
+    | sort 0 user, _time
+    | streamstats window=1 current=f last(_time) AS last_time last(src_ip) AS last_src_ip by user
+    | streamstats window=1 current=f last(last_time) AS last2_time last(last_src_ip) AS last2_src_ip by user
+    | eval pingpong = if(src_ip = last2_src_ip AND src_ip != last_src_ip AND (_time - last2_time) < 900, 1, 0)
+    | where last_src_ip != src_ip
+    | iplocation last_src_ip
+    | rename lat AS last_lat lon AS last_lon City as last_city Region as last_region Country as last_country
+    | iplocation src_ip
+    | eval rlat1 = pi()*last_lat/180, rlat2=pi()*lat/180, rlat = pi()*(lat-last_lat)/180, rlon= pi()*(lon-last_lon)/180
+    | eval a = sin(rlat/2) * sin(rlat/2) + cos(rlat1) * cos(rlat2) * sin(rlon/2) * sin(rlon/2)
+    | eval c = 2 * atan2(sqrt(a), sqrt(1-a))
+    | eval distance = 6371 * c, time_difference_hours = round((_time - last_time) / 3600,2)
+    | eval distance= distance * 0.621371
+    | eval speed=round(distance / (time_difference_hours),2)
+    | fields - rlat* a c
+    | eval last_time= strftime(last_time,"%Y-%m-%d %H:%M:%S")
+    | where speed > 5000
+    | table user src_ip last_src_ip last2_src_ip _time last_time src_ip City, last_city, Region, last_region Country, last_country, time_difference_hours, distance, speed
+notes:
+  - Filters out private IP addresses (RFC 1918) to focus on external authentication attempts
+  - Uses Haversine formula to calculate great-circle distance between two geographic points
+  - rlat1, rlat2, rlat, rlon convert latitude and longitude to radians for Haversine calculation
+  - Distance initially calculated in kilometers (Earth radius = 6371 km), then converted to miles
+  - Speed threshold set to 5000 mph to detect impossible travel scenarios
+  - pingpong detection identifies alternating logins between two locations within 900 seconds (15 minutes)
+  - Filters out consecutive events from the same src_ip to reduce noise
+  - time_difference_hours shows the elapsed time between authentication events
+  - Adjust speed threshold (currently 5000 mph) based on your detection requirements
+  - Consider legitimate scenarios like VPN usage, proxy servers, or load balancers
+false_positives:
+  - VPN connections with geographically distributed exit nodes
+  - Corporate proxy servers in multiple regions
+  - Load balancers with geo-distributed endpoints
+  - Shared accounts (service accounts, kiosks)
+  - Mobile users on airplanes with in-flight WiFi
+mitigation:
+  - Verify with user if travel or VPN usage occurred
+  - Check for compromised credentials
+  - Review authentication logs for other suspicious activity
+  - Implement additional MFA requirements for geo-anomalous logins
+  - Correlate with other security events (password changes, privilege escalation)
