@@ -1,0 +1,120 @@
+# ============================================================================
+# Sigma-like Detection Rule Template
+# ============================================================================
+# This template provides a standardized format for documenting SPL-based
+# detection rules with metadata, context, and response guidance.
+# ============================================================================
+
+title: <Short Descriptive Title of the Detection>
+  # Brief, clear name for the detection rule
+  # Example: "Potential C2 Beacon Detection via Statistical Analysis"
+
+id: <UUID in format xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx>
+  # Unique identifier for this rule (generate at https://www.uuidgenerator.net/)
+  # Example: a7f3c892-5d6e-4b1a-9c2f-8e4d7f9a3b5c
+
+author: <Your Name> <your.email@domain.com>
+  # Rule author's name and contact information
+  # Example: Steven Lourenco 20stevenl02@gmail.com
+
+date: <YYYY-MM-DD>
+  # Date the rule was created or last modified
+  # Example: 2026-05-13
+
+description: |
+  <Detailed description of what this detection rule identifies, 
+  the technique it detects, and how it works. Can span multiple lines.>
+  # Provide context about the threat, the detection methodology, and expected outcomes
+  # Example: "Detects potential command and control beaconing activity..."
+
+log_source:
+  platform: <splunk|elastic|azure_sentinel|etc>
+    # The SIEM/logging platform where this query runs
+    
+  product: <vendor_name|agnostic>
+    # The product/vendor generating the logs (Microsoft, Palo Alto, Cisco, etc.)
+    # Use "agnostic" if applicable across multiple products
+    
+  category: <log_category>
+    # Type of logs being analyzed
+    # Examples: Windows Event Logs, Firewall, Network Traffic, Authentication, EDR
+
+query:
+  language: <spl|kql|lucene|sql>
+    # Query language used (SPL for Splunk, KQL for Sentinel, etc.)
+    
+  text: |
+    <Your query goes here>
+    <Use pipe character for line continuation>
+    <Maintain proper indentation>
+    <Keep query clean without inline comments>
+    # Multi-line queries should use the pipe (|) literal indicator
+    # Preserve all query logic, filters, and transformations
+
+notes:
+  # Technical implementation details, tuning guidance, and detection logic explanation
+  - <Explanation of key detection logic or algorithms used>
+  - <Description of thresholds and why they were chosen>
+  - <Tuning recommendations for different environments>
+  - <Mathematical formulas or statistical methods explained>
+  - <Field definitions and what they represent>
+  - <Adjustment parameters and their effects>
+  - <Baseline expectations and normal behavior patterns>
+  # Add as many notes as needed to fully document the detection
+
+false_positives:
+  # Known legitimate scenarios that may trigger this detection
+  - <Legitimate business process or application behavior>
+  - <Normal administrative activities>
+  - <Infrastructure or architectural patterns>
+  - <Temporal patterns (time-based variations)>
+  - <Specific system types or roles prone to false positives>
+  # Understanding false positives helps with alert triage and tuning
+
+mitigation:
+  # Recommended investigation steps and response actions
+  - <Initial investigation steps>
+  - <Data points to correlate or verify>
+  - <Questions to ask or systems to check>
+  - <Escalation criteria>
+  - <Remediation actions if confirmed malicious>
+  - <Long-term prevention measures>
+  # Provides analysts with clear next steps when alert fires
+
+references:
+  # Optional: External documentation, research, or related resources
+  - <URL to relevant threat intelligence or research papers>
+  - <Links to ATT&CK techniques or frameworks>
+  - <Internal documentation or runbooks>
+  - <Related detection rules or playbooks>
+  # Helps analysts understand broader context and related techniques
+
+tags:
+  # Optional: Categories or labels for organizing and filtering rules
+  - <mitre_attack_technique_id>  # Example: T1071.001
+  - <detection_category>           # Example: lateral_movement, exfiltration
+  - <severity_level>               # Example: high, medium, low
+  - <data_source>                  # Example: network, endpoint, cloud
+  # Useful for rule management and detection coverage mapping
+
+level: <critical|high|medium|low|informational>
+  # Optional: Severity or priority level of detections from this rule
+  # Helps with alert prioritization and SLA definitions
+
+status: <stable|testing|experimental|deprecated>
+  # Optional: Rule maturity and deployment status
+  # stable: Production-ready, well-tuned
+  # testing: Under evaluation, may need tuning
+  # experimental: New detection, requires validation
+  # deprecated: No longer recommended for use
+
+# ============================================================================
+# Usage Notes:
+# ============================================================================
+# - Remove all comments (lines starting with #) from production rules
+# - Replace all <placeholder> text with actual values
+# - Ensure proper YAML indentation (2 spaces per level)
+# - Test queries in target platform before deploying
+# - Version control your detection rules
+# - Review and update regularly based on environment changes
+# ============================================================================
