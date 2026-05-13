@@ -28,3 +28,20 @@ notes:
   - isOutlier flags values outside the bounds (1=outlier, 0=normal)
   - Higher multiplier = fewer outliers detected (less sensitive)
   - Lower multiplier = more outliers detected (more sensitive)
+false_positives:
+  - New servers recently added to the environment with limited baseline data
+  - Servers undergoing maintenance or scheduled downtime (low count outliers)
+  - Development/test systems with sporadic usage patterns
+  - Batch processing servers with scheduled intensive workloads (high count outliers)
+  - Systems running automated deployment or software installation activities
+  - Domain controllers or build servers with naturally high process creation rates
+  - Servers with recently changed roles or workloads
+  - Time-based variations (weekend vs weekday activity, business hours vs off-hours)
+mitigation:
+  - Investigate high outliers for potential malicious process execution or lateral movement
+  - Investigate low outliers for potential logging disruption, system compromise, or service failures
+  - Correlate with other security events from the same host
+  - Review process command lines and parent-child relationships for suspicious activity
+  - Check for signs of log tampering or logging service interruptions on low-count outliers
+  - Validate system health and availability on systems with abnormal counts
+  - Consider creating separate baselines for different server roles or time periods
